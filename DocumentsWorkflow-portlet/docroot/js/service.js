@@ -1,0 +1,1 @@
+Liferay.Service.register("Liferay.Service.docs", "com.maximgalushka.service.service", "DocumentsWorkflow-portlet");

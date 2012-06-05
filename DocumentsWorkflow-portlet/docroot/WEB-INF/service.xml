@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE service-builder PUBLIC "-//Liferay//DTD Service Builder 6.0.0//EN" "http://www.liferay.com/dtd/liferay-service-builder_6_0_0.dtd">
+<service-builder package-path="com.maximgalushka.service">
+	<author>mgalushka</author>
+	<namespace>docs</namespace>
+
+	<entity name="Document" local-service="true" remote-service="false" human-name="Document">
+
+		<!-- PK fields -->
+
+		<column name="documentId" type="long" primary="true" id-type="increment"/>
+
+		<!-- Audit fields -->
+
+		<column name="companyId" type="long"></column>
+		<column name="userId" type="long"></column>
+
+		<!-- Other fields -->
+
+		<!-- Order -->
+        <column name="title" type="String" />
+        <column name="type" type="String" />
+
+		<order by="desc">
+			<order-column name="documentId" />
+		</order>
+
+		<!-- Finder methods -->
+
+		<finder name="title" return-type="Collection">
+			<finder-column name="title" />
+		</finder>
+	</entity>
+    <entity name="History" human-name="History">
+        <column name="logId" type="long" primary="true" id-type="increment"></column>
+        <column name="documentId" type="long"></column>
+        <column name="userId" type="long"></column>
+        <column name="status" type="String"></column>
+        <column name="updatedDate" type="Date"></column>
+        <column name="comment" convert-null="false" type="String"></column>
+        <order by="asc">
+            <order-column name="logId"></order-column>
+        </order>
+        <finder return-type="Collection" name="getDocumentHistory">
+            <finder-column name="documentId"></finder-column>
+        </finder>
+    </entity>
+</service-builder>

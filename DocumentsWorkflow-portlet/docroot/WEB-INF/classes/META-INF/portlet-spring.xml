@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" default-destroy-method="destroy" default-init-method="afterPropertiesSet" xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd">
+	<bean id="com.maximgalushka.service.service.DocumentLocalService" class="com.maximgalushka.service.service.impl.DocumentLocalServiceImpl" />
+	<bean id="com.maximgalushka.service.service.DocumentLocalServiceUtil" class="com.maximgalushka.service.service.DocumentLocalServiceUtil">
+		<property name="service" ref="com.maximgalushka.service.service.DocumentLocalService" />
+	</bean>
+	<bean id="com.maximgalushka.service.service.persistence.DocumentPersistence" class="com.maximgalushka.service.service.persistence.DocumentPersistenceImpl" parent="basePersistence" />
+	<bean id="com.maximgalushka.service.service.HistoryService" class="com.maximgalushka.service.service.impl.HistoryServiceImpl" />
+	<bean id="com.maximgalushka.service.service.HistoryServiceUtil" class="com.maximgalushka.service.service.HistoryServiceUtil">
+		<property name="service" ref="com.maximgalushka.service.service.HistoryService" />
+	</bean>
+	<bean id="com.maximgalushka.service.service.persistence.HistoryPersistence" class="com.maximgalushka.service.service.persistence.HistoryPersistenceImpl" parent="basePersistence" />
+</beans>

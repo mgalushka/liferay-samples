@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+
+<model-hints>
+	<model name="com.maximgalushka.service.model.Document">
+		<field name="documentId" type="long" />
+		<field name="companyId" type="long" />
+		<field name="userId" type="long" />
+		<field name="title" type="String" />
+		<field name="type" type="String" />
+	</model>
+	<model name="com.maximgalushka.service.model.History">
+		<field name="logId" type="long" />
+		<field name="documentId" type="long" />
+		<field name="userId" type="long" />
+		<field name="status" type="String" />
+		<field name="updatedDate" type="Date" />
+		<field name="comment" type="String" />
+	</model>
+</model-hints>

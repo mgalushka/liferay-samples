@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<diagram-geometry>
+    <grid>
+        <visible>true</visible>
+    </grid>
+    <guides>
+        <visible>false</visible>
+    </guides>
+    <node>
+        <id>Entity#Document</id>
+        <bounds x="208" y="36"/>
+    </node>
+    <node>
+        <id>Entity#History</id>
+        <bounds x="36" y="36"/>
+    </node>
+</diagram-geometry>

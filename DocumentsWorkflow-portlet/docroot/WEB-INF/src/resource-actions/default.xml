@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resource-action-mapping>
+
+  <portlet-resource>
+    <portlet-name>DocumentsWorkflow</portlet-name>
+    <permissions>
+      <supports>
+        <action-key>ADD_DOCUMENT</action-key>
+        <action-key>ADD</action-key>
+        <action-key>VIEW</action-key>
+        <action-key>UPDATE</action-key>
+        <action-key>DELETE</action-key>
+        <action-key>SIGNOFF</action-key>
+        <action-key>PERMISSIONS</action-key>
+      </supports>
+      <community-defaults>
+        <action-key>VIEW</action-key>
+        <action-key>UPDATE</action-key>
+        <action-key>DELETE</action-key>
+        <action-key>SIGNOFF</action-key>
+        <action-key>PERMISSIONS</action-key>
+      </community-defaults>
+      <guest-defaults>
+        <action-key>VIEW</action-key>
+      </guest-defaults>
+      <guest-unsupported>
+        <action-key>ADD_DOCUMENT</action-key>
+        <action-key>UPDATE</action-key>
+        <action-key>DELETE</action-key>
+        <action-key>SIGNOFF</action-key>
+        <action-key>PERMISSIONS</action-key>
+      </guest-unsupported>
+    </permissions>
+  </portlet-resource>
+
+  <model-resource>
+    <model-name>
+      com.maximgalushka.service.model.Document
+    </model-name>
+    <portlet-ref>
+      <portlet-name>DocumentsWorkflow</portlet-name>
+    </portlet-ref>
+    <permissions>
+      <supports>
+        <action-key>ADD</action-key> 
+        <action-key>VIEW</action-key>
+        <action-key>UPDATE</action-key>
+        <action-key>SIGNOFF</action-key> 
+        <action-key>DELETE</action-key>
+        <action-key>PERMISSIONS</action-key>
+      </supports>
+      <community-defaults>
+        <action-key>ADD</action-key> 
+        <action-key>VIEW</action-key>
+        <action-key>UPDATE</action-key>
+      </community-defaults>
+      <guest-defaults>
+        <action-key>VIEW</action-key>
+      </guest-defaults>
+      <guest-unsupported>
+        <action-key>UPDATE</action-key>
+        <action-key>SIGNOFF</action-key> 
+        <action-key>DELETE</action-key>
+        <action-key>PERMISSIONS</action-key>
+      </guest-unsupported>
+    </permissions>
+  </model-resource>
+
+  <model-resource>
+    <model-name>
+      com.maximgalushka.service.model.History
+    </model-name>
+    <portlet-ref>
+      <portlet-name>DocumentsWorkflow</portlet-name>
+    </portlet-ref>
+    <permissions>
+      <supports>
+      	<action-key>VIEW</action-key>
+        <action-key>ADD</action-key>
+      </supports>
+      <community-defaults>
+        <action-key>VIEW</action-key>
+        <action-key>ADD</action-key>
+      </community-defaults>
+      <guest-defaults>
+        <action-key>VIEW</action-key>
+      </guest-defaults>
+      <guest-unsupported>
+        <action-key>ADD</action-key>
+      </guest-unsupported>
+    </permissions>
+  </model-resource>
+
+</resource-action-mapping>
