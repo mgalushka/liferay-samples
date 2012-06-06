@@ -105,6 +105,14 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		_type = type;
 	}
 
+	public int getStatus() {
+		return _status;
+	}
+
+	public void setStatus(int status) {
+		_status = status;
+	}
+
 	public void persist() throws SystemException {
 		if (this.isNew()) {
 			DocumentLocalServiceUtil.addDocument(this);
@@ -129,6 +137,7 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		clone.setUserId(getUserId());
 		clone.setTitle(getTitle());
 		clone.setType(getType());
+		clone.setStatus(getStatus());
 
 		return clone;
 	}
@@ -187,7 +196,7 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{documentId=");
 		sb.append(getDocumentId());
@@ -199,13 +208,15 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		sb.append(getTitle());
 		sb.append(", type=");
 		sb.append(getType());
+		sb.append(", status=");
+		sb.append(getStatus());
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(19);
+		StringBundler sb = new StringBundler(22);
 
 		sb.append("<model><model-name>");
 		sb.append("com.maximgalushka.service.model.Document");
@@ -231,6 +242,10 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 			"<column><column-name>type</column-name><column-value><![CDATA[");
 		sb.append(getType());
 		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>status</column-name><column-value><![CDATA[");
+		sb.append(getStatus());
+		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
 
@@ -243,4 +258,5 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 	private String _userUuid;
 	private String _title;
 	private String _type;
+	private int _status;
 }

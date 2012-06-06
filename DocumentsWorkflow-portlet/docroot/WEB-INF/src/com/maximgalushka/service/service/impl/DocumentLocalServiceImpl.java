@@ -14,7 +14,10 @@
 
 package com.maximgalushka.service.service.impl;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.kernel.workflow.WorkflowConstants;
+import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
 import com.maximgalushka.service.model.Document;
 import com.maximgalushka.service.service.base.DocumentLocalServiceBaseImpl;
 
@@ -59,6 +62,31 @@ public class DocumentLocalServiceImpl extends DocumentLocalServiceBaseImpl {
 			e.printStackTrace();
 		}
 
+		try {
+			document.setStatus(WorkflowConstants.STATUS_DRAFT);
+			WorkflowHandlerRegistryUtil.startWorkflowInstance(document.getCompanyId(), 
+					document.getUserId(), Document.class.getName(), document.getPrimaryKey(), 
+					document, null);
+			
+		} catch (PortalException e) {
+			e.printStackTrace();
+		}
+		
+		
 		return document;
+	}
+	
+	public void deleteDocument(Document document) throws SystemException {
+		super.deleteDocument(document);
+		
+		try {
+			resourceLocalService.deleteResource(
+					document.getCompanyId(),
+					Document.class.getName(),
+					4,
+					Long.toString(document.getPrimaryKey()));
+		} catch (PortalException e) {
+			e.printStackTrace();
+		}
 	}
 }

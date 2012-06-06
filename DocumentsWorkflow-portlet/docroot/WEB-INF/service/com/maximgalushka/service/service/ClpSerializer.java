@@ -174,6 +174,13 @@ public class ClpSerializer {
 
 				method4.invoke(newModel, value4);
 
+				Method method5 = newModelClass.getMethod("setStatus",
+						new Class[] { Integer.TYPE });
+
+				Integer value5 = new Integer(oldCplModel.getStatus());
+
+				method5.invoke(newModel, value5);
+
 				return newModel;
 			}
 			catch (Exception e) {
@@ -354,6 +361,13 @@ public class ClpSerializer {
 				String value4 = (String)method4.invoke(oldModel, (Object[])null);
 
 				newModel.setType(value4);
+
+				Method method5 = oldModelClass.getMethod("getStatus");
+
+				Integer value5 = (Integer)method5.invoke(oldModel,
+						(Object[])null);
+
+				newModel.setStatus(value5);
 
 				return newModel;
 			}

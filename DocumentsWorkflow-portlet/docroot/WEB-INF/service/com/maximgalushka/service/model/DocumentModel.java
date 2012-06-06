@@ -145,6 +145,20 @@ public interface DocumentModel extends BaseModel<Document> {
 	 */
 	public void setType(String type);
 
+	/**
+	 * Returns the status of this Document.
+	 *
+	 * @return the status of this Document
+	 */
+	public int getStatus();
+
+	/**
+	 * Sets the status of this Document.
+	 *
+	 * @param status the status of this Document
+	 */
+	public void setStatus(int status);
+
 	public boolean isNew();
 
 	public void setNew(boolean n);

@@ -348,6 +348,7 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		documentImpl.setUserId(document.getUserId());
 		documentImpl.setTitle(document.getTitle());
 		documentImpl.setType(document.getType());
+		documentImpl.setStatus(document.getStatus());
 
 		return documentImpl;
 	}

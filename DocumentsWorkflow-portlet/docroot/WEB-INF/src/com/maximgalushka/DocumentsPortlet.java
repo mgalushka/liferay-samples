@@ -61,6 +61,23 @@ public class DocumentsPortlet extends MVCPortlet {
 	public void deleteDocument(ActionRequest request, ActionResponse response) 
 			throws SystemException{		
 		
+		
+		String primaryKeyString = request.getParameter("resourcePrimKey");
+		if(primaryKeyString != null){
+			// to delete existing
+			Long documentPrimaryKey = Long.parseLong(primaryKeyString);
+			log.debug(String.format("Deleting document ID: [%d]", documentPrimaryKey));
+			if(documentPrimaryKey != null){
+				try {
+					Document doc = DocumentLocalServiceUtil.getDocument(documentPrimaryKey);
+					if(doc != null){
+						DocumentLocalServiceUtil.deleteDocument(doc);
+					}
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}
 		// DO NOTHING for now		
 		response.setRenderParameter("jspPage", "/html/documentsportlet/view.jsp");
 	}

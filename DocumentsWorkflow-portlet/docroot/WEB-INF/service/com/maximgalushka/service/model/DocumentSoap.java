@@ -34,6 +34,7 @@ public class DocumentSoap implements Serializable {
 		soapModel.setUserId(model.getUserId());
 		soapModel.setTitle(model.getTitle());
 		soapModel.setType(model.getType());
+		soapModel.setStatus(model.getStatus());
 
 		return soapModel;
 	}
@@ -126,9 +127,18 @@ public class DocumentSoap implements Serializable {
 		_type = type;
 	}
 
+	public int getStatus() {
+		return _status;
+	}
+
+	public void setStatus(int status) {
+		_status = status;
+	}
+
 	private long _documentId;
 	private long _companyId;
 	private long _userId;
 	private String _title;
 	private String _type;
+	private int _status;
 }

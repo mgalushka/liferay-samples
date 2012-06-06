@@ -3,7 +3,8 @@ create table docs_Document (
 	companyId LONG,
 	userId LONG,
 	title VARCHAR(75) null,
-	type_ VARCHAR(75) null
+	type_ VARCHAR(75) null,
+	status INTEGER
 );
 
 create table docs_History (

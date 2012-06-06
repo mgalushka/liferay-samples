@@ -32,7 +32,7 @@ import java.io.Serializable;
 public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{documentId=");
 		sb.append(documentId);
@@ -44,6 +44,8 @@ public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 		sb.append(title);
 		sb.append(", type=");
 		sb.append(type);
+		sb.append(", status=");
+		sb.append(status);
 		sb.append("}");
 
 		return sb.toString();
@@ -70,6 +72,8 @@ public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 			documentImpl.setType(type);
 		}
 
+		documentImpl.setStatus(status);
+
 		documentImpl.resetOriginalValues();
 
 		return documentImpl;
@@ -80,4 +84,5 @@ public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 	public long userId;
 	public String title;
 	public String type;
+	public int status;
 }

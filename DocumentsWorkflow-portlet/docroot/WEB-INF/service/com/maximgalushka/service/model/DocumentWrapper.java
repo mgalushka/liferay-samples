@@ -166,6 +166,24 @@ public class DocumentWrapper implements Document, ModelWrapper<Document> {
 		_document.setType(type);
 	}
 
+	/**
+	* Returns the status of this Document.
+	*
+	* @return the status of this Document
+	*/
+	public int getStatus() {
+		return _document.getStatus();
+	}
+
+	/**
+	* Sets the status of this Document.
+	*
+	* @param status the status of this Document
+	*/
+	public void setStatus(int status) {
+		_document.setStatus(status);
+	}
+
 	public boolean isNew() {
 		return _document.isNew();
 	}

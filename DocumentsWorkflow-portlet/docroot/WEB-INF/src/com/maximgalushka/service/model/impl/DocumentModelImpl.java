@@ -61,9 +61,10 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 			{ "companyId", Types.BIGINT },
 			{ "userId", Types.BIGINT },
 			{ "title", Types.VARCHAR },
-			{ "type_", Types.VARCHAR }
+			{ "type_", Types.VARCHAR },
+			{ "status", Types.INTEGER }
 		};
-	public static final String TABLE_SQL_CREATE = "create table docs_Document (documentId LONG not null primary key,companyId LONG,userId LONG,title VARCHAR(75) null,type_ VARCHAR(75) null)";
+	public static final String TABLE_SQL_CREATE = "create table docs_Document (documentId LONG not null primary key,companyId LONG,userId LONG,title VARCHAR(75) null,type_ VARCHAR(75) null,status INTEGER)";
 	public static final String TABLE_SQL_DROP = "drop table docs_Document";
 	public static final String ORDER_BY_JPQL = " ORDER BY document.documentId DESC";
 	public static final String ORDER_BY_SQL = " ORDER BY docs_Document.documentId DESC";
@@ -180,6 +181,14 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 		_type = type;
 	}
 
+	public int getStatus() {
+		return _status;
+	}
+
+	public void setStatus(int status) {
+		_status = status;
+	}
+
 	public long getColumnBitmask() {
 		return _columnBitmask;
 	}
@@ -219,6 +228,7 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 		documentImpl.setUserId(getUserId());
 		documentImpl.setTitle(getTitle());
 		documentImpl.setType(getType());
+		documentImpl.setStatus(getStatus());
 
 		documentImpl.resetOriginalValues();
 
@@ -312,12 +322,14 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 			documentCacheModel.type = null;
 		}
 
+		documentCacheModel.status = getStatus();
+
 		return documentCacheModel;
 	}
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(11);
+		StringBundler sb = new StringBundler(13);
 
 		sb.append("{documentId=");
 		sb.append(getDocumentId());
@@ -329,13 +341,15 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 		sb.append(getTitle());
 		sb.append(", type=");
 		sb.append(getType());
+		sb.append(", status=");
+		sb.append(getStatus());
 		sb.append("}");
 
 		return sb.toString();
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(19);
+		StringBundler sb = new StringBundler(22);
 
 		sb.append("<model><model-name>");
 		sb.append("com.maximgalushka.service.model.Document");
@@ -361,6 +375,10 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 			"<column><column-name>type</column-name><column-value><![CDATA[");
 		sb.append(getType());
 		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>status</column-name><column-value><![CDATA[");
+		sb.append(getStatus());
+		sb.append("]]></column-value></column>");
 
 		sb.append("</model>");
 
@@ -378,6 +396,7 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	private String _title;
 	private String _originalTitle;
 	private String _type;
+	private int _status;
 	private transient ExpandoBridge _expandoBridge;
 	private long _columnBitmask;
 	private Document _escapedModelProxy;
