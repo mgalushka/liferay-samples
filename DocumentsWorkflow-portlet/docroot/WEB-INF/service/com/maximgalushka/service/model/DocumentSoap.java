@@ -29,8 +29,10 @@ public class DocumentSoap implements Serializable {
 	public static DocumentSoap toSoapModel(Document model) {
 		DocumentSoap soapModel = new DocumentSoap();
 
+		soapModel.setUuid(model.getUuid());
 		soapModel.setDocumentId(model.getDocumentId());
 		soapModel.setCompanyId(model.getCompanyId());
+		soapModel.setGroupId(model.getGroupId());
 		soapModel.setUserId(model.getUserId());
 		soapModel.setTitle(model.getTitle());
 		soapModel.setType(model.getType());
@@ -87,6 +89,14 @@ public class DocumentSoap implements Serializable {
 		setDocumentId(pk);
 	}
 
+	public String getUuid() {
+		return _uuid;
+	}
+
+	public void setUuid(String uuid) {
+		_uuid = uuid;
+	}
+
 	public long getDocumentId() {
 		return _documentId;
 	}
@@ -101,6 +111,14 @@ public class DocumentSoap implements Serializable {
 
 	public void setCompanyId(long companyId) {
 		_companyId = companyId;
+	}
+
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
 	}
 
 	public long getUserId() {
@@ -135,8 +153,10 @@ public class DocumentSoap implements Serializable {
 		_status = status;
 	}
 
+	private String _uuid;
 	private long _documentId;
 	private long _companyId;
+	private long _groupId;
 	private long _userId;
 	private String _title;
 	private String _type;

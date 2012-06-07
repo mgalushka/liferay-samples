@@ -57,6 +57,24 @@ public class DocumentWrapper implements Document, ModelWrapper<Document> {
 	}
 
 	/**
+	* Returns the uuid of this Document.
+	*
+	* @return the uuid of this Document
+	*/
+	public java.lang.String getUuid() {
+		return _document.getUuid();
+	}
+
+	/**
+	* Sets the uuid of this Document.
+	*
+	* @param uuid the uuid of this Document
+	*/
+	public void setUuid(java.lang.String uuid) {
+		_document.setUuid(uuid);
+	}
+
+	/**
 	* Returns the document ID of this Document.
 	*
 	* @return the document ID of this Document
@@ -90,6 +108,24 @@ public class DocumentWrapper implements Document, ModelWrapper<Document> {
 	*/
 	public void setCompanyId(long companyId) {
 		_document.setCompanyId(companyId);
+	}
+
+	/**
+	* Returns the group ID of this Document.
+	*
+	* @return the group ID of this Document
+	*/
+	public long getGroupId() {
+		return _document.getGroupId();
+	}
+
+	/**
+	* Sets the group ID of this Document.
+	*
+	* @param groupId the group ID of this Document
+	*/
+	public void setGroupId(long groupId) {
+		_document.setGroupId(groupId);
 	}
 
 	/**

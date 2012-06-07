@@ -180,6 +180,22 @@ public class DocumentLocalServiceWrapper implements DocumentLocalService,
 	}
 
 	/**
+	* Returns the Document with the UUID in the group.
+	*
+	* @param uuid the UUID of Document
+	* @param groupId the group id of the Document
+	* @return the Document
+	* @throws PortalException if a Document with the UUID in the group could not be found
+	* @throws SystemException if a system exception occurred
+	*/
+	public com.maximgalushka.service.model.Document getDocumentByUuidAndGroupId(
+		java.lang.String uuid, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _documentLocalService.getDocumentByUuidAndGroupId(uuid, groupId);
+	}
+
+	/**
 	* Returns a range of all the Documents.
 	*
 	* <p>
@@ -251,6 +267,22 @@ public class DocumentLocalServiceWrapper implements DocumentLocalService,
 	*/
 	public void setBeanIdentifier(java.lang.String beanIdentifier) {
 		_documentLocalService.setBeanIdentifier(beanIdentifier);
+	}
+
+	public com.maximgalushka.service.model.Document addDocument(
+		com.maximgalushka.service.model.Document document,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		return _documentLocalService.addDocument(document, serviceContext);
+	}
+
+	public com.maximgalushka.service.model.Document updateStatus(long userId,
+		long resourcePrimKey, int status,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		return _documentLocalService.updateStatus(userId, resourcePrimKey,
+			status, serviceContext);
 	}
 
 	/**

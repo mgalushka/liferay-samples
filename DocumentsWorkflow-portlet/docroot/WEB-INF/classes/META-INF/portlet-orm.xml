@@ -10,7 +10,11 @@
 	<mapped-superclass class="com.maximgalushka.service.model.impl.DocumentModelImpl">
 		<attributes>
 			<id name="documentId" />
+			<basic name="uuid">
+				<column name="UUID_" />
+			</basic>
 			<basic name="companyId" />
+			<basic name="groupId" />
 			<basic name="userId" />
 			<basic name="title" />
 			<basic name="type">

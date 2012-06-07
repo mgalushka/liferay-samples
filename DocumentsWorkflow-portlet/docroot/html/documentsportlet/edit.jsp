@@ -1,3 +1,4 @@
+<%@page import="com.maximgalushka.service.service.DocumentLocalServiceUtil"%>
 <%@include file="init.jsp" %>
 
 Here you can edit your document.
@@ -9,10 +10,16 @@ Document doc = (Document) request.getAttribute("document");
 String primaryKey = "";
 Boolean isForm = false;
 if(doc == null){
-	// defaulting
-	doc = new DocumentImpl();
-	doc.setTitle("");
-	doc.setType("form");	
+	String docId = (String) request.getAttribute("documentId");
+	if(docId != null){
+		doc = DocumentLocalServiceUtil.getDocument(Long.parseLong(docId));
+	}	
+	if(doc == null){
+		// defaulting
+		doc = new DocumentImpl();
+		doc.setTitle("");
+		doc.setType("form");
+	}
 }
 else{
 	primaryKey = Long.toString(doc.getPrimaryKey());

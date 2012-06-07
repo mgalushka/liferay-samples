@@ -23,7 +23,6 @@ import com.liferay.portal.kernel.dao.orm.FinderPath;
 import com.liferay.portal.kernel.dao.orm.Query;
 import com.liferay.portal.kernel.dao.orm.QueryPos;
 import com.liferay.portal.kernel.dao.orm.QueryUtil;
-import com.liferay.portal.kernel.dao.orm.SQLQuery;
 import com.liferay.portal.kernel.dao.orm.Session;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.log.Log;
@@ -36,13 +35,16 @@ import com.liferay.portal.kernel.util.PropsUtil;
 import com.liferay.portal.kernel.util.StringBundler;
 import com.liferay.portal.kernel.util.StringPool;
 import com.liferay.portal.kernel.util.StringUtil;
+import com.liferay.portal.kernel.util.Validator;
+import com.liferay.portal.kernel.uuid.PortalUUIDUtil;
 import com.liferay.portal.model.CacheModel;
 import com.liferay.portal.model.ModelListener;
-import com.liferay.portal.security.permission.InlineSQLHelperUtil;
 import com.liferay.portal.service.persistence.BatchSessionUtil;
 import com.liferay.portal.service.persistence.ResourcePersistence;
 import com.liferay.portal.service.persistence.UserPersistence;
 import com.liferay.portal.service.persistence.impl.BasePersistenceImpl;
+
+import com.liferay.portlet.asset.service.persistence.AssetEntryPersistence;
 
 import com.maximgalushka.service.NoSuchDocumentException;
 import com.maximgalushka.service.model.Document;
@@ -79,6 +81,34 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		".List1";
 	public static final String FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION = FINDER_CLASS_NAME_ENTITY +
 		".List2";
+	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
+			DocumentModelImpl.FINDER_CACHE_ENABLED, DocumentImpl.class,
+			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findByUuid",
+			new String[] {
+				String.class.getName(),
+				
+			"java.lang.Integer", "java.lang.Integer",
+				"com.liferay.portal.kernel.util.OrderByComparator"
+			});
+	public static final FinderPath FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
+			DocumentModelImpl.FINDER_CACHE_ENABLED, DocumentImpl.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "findByUuid",
+			new String[] { String.class.getName() },
+			DocumentModelImpl.UUID_COLUMN_BITMASK);
+	public static final FinderPath FINDER_PATH_COUNT_BY_UUID = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
+			DocumentModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUuid",
+			new String[] { String.class.getName() });
+	public static final FinderPath FINDER_PATH_FETCH_BY_UUID_G = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
+			DocumentModelImpl.FINDER_CACHE_ENABLED, DocumentImpl.class,
+			FINDER_CLASS_NAME_ENTITY, "fetchByUUID_G",
+			new String[] { String.class.getName(), Long.class.getName() },
+			DocumentModelImpl.UUID_COLUMN_BITMASK |
+			DocumentModelImpl.GROUPID_COLUMN_BITMASK);
+	public static final FinderPath FINDER_PATH_COUNT_BY_UUID_G = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
+			DocumentModelImpl.FINDER_CACHE_ENABLED, Long.class,
+			FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION, "countByUUID_G",
+			new String[] { String.class.getName(), Long.class.getName() });
 	public static final FinderPath FINDER_PATH_WITH_PAGINATION_FIND_BY_TITLE = new FinderPath(DocumentModelImpl.ENTITY_CACHE_ENABLED,
 			DocumentModelImpl.FINDER_CACHE_ENABLED, DocumentImpl.class,
 			FINDER_CLASS_NAME_LIST_WITH_PAGINATION, "findBytitle",
@@ -115,6 +145,10 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 	public void cacheResult(Document document) {
 		EntityCacheUtil.putResult(DocumentModelImpl.ENTITY_CACHE_ENABLED,
 			DocumentImpl.class, document.getPrimaryKey(), document);
+
+		FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_UUID_G,
+			new Object[] { document.getUuid(), Long.valueOf(
+					document.getGroupId()) }, document);
 
 		document.resetOriginalValues();
 	}
@@ -171,6 +205,8 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITH_PAGINATION);
 		FinderCacheUtil.clearCache(FINDER_CLASS_NAME_LIST_WITHOUT_PAGINATION);
+
+		clearUniqueFindersCache(document);
 	}
 
 	@Override
@@ -181,7 +217,15 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		for (Document document : documents) {
 			EntityCacheUtil.removeResult(DocumentModelImpl.ENTITY_CACHE_ENABLED,
 				DocumentImpl.class, document.getPrimaryKey());
+
+			clearUniqueFindersCache(document);
 		}
+	}
+
+	protected void clearUniqueFindersCache(Document document) {
+		FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_UUID_G,
+			new Object[] { document.getUuid(), Long.valueOf(
+					document.getGroupId()) });
 	}
 
 	/**
@@ -195,6 +239,10 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 
 		document.setNew(true);
 		document.setPrimaryKey(documentId);
+
+		String uuid = PortalUUIDUtil.generate();
+
+		document.setUuid(uuid);
 
 		return document;
 	}
@@ -286,6 +334,12 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 
 		DocumentModelImpl documentModelImpl = (DocumentModelImpl)document;
 
+		if (Validator.isNull(document.getUuid())) {
+			String uuid = PortalUUIDUtil.generate();
+
+			document.setUuid(uuid);
+		}
+
 		Session session = null;
 
 		try {
@@ -310,6 +364,21 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 
 		else {
 			if ((documentModelImpl.getColumnBitmask() &
+					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID.getColumnBitmask()) != 0) {
+				Object[] args = new Object[] { documentModelImpl.getOriginalUuid() };
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
+					args);
+
+				args = new Object[] { documentModelImpl.getUuid() };
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID,
+					args);
+			}
+
+			if ((documentModelImpl.getColumnBitmask() &
 					FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_TITLE.getColumnBitmask()) != 0) {
 				Object[] args = new Object[] {
 						documentModelImpl.getOriginalTitle()
@@ -330,6 +399,30 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		EntityCacheUtil.putResult(DocumentModelImpl.ENTITY_CACHE_ENABLED,
 			DocumentImpl.class, document.getPrimaryKey(), document);
 
+		if (isNew) {
+			FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_UUID_G,
+				new Object[] {
+					document.getUuid(), Long.valueOf(document.getGroupId())
+				}, document);
+		}
+		else {
+			if ((documentModelImpl.getColumnBitmask() &
+					FINDER_PATH_FETCH_BY_UUID_G.getColumnBitmask()) != 0) {
+				Object[] args = new Object[] {
+						documentModelImpl.getOriginalUuid(),
+						Long.valueOf(documentModelImpl.getOriginalGroupId())
+					};
+
+				FinderCacheUtil.removeResult(FINDER_PATH_COUNT_BY_UUID_G, args);
+				FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_UUID_G, args);
+
+				FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_UUID_G,
+					new Object[] {
+						document.getUuid(), Long.valueOf(document.getGroupId())
+					}, document);
+			}
+		}
+
 		return document;
 	}
 
@@ -343,8 +436,10 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		documentImpl.setNew(document.isNew());
 		documentImpl.setPrimaryKey(document.getPrimaryKey());
 
+		documentImpl.setUuid(document.getUuid());
 		documentImpl.setDocumentId(document.getDocumentId());
 		documentImpl.setCompanyId(document.getCompanyId());
+		documentImpl.setGroupId(document.getGroupId());
 		documentImpl.setUserId(document.getUserId());
 		documentImpl.setTitle(document.getTitle());
 		documentImpl.setType(document.getType());
@@ -450,6 +545,528 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		}
 
 		return document;
+	}
+
+	/**
+	 * Returns all the Documents where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the matching Documents
+	 * @throws SystemException if a system exception occurred
+	 */
+	public List<Document> findByUuid(String uuid) throws SystemException {
+		return findByUuid(uuid, QueryUtil.ALL_POS, QueryUtil.ALL_POS, null);
+	}
+
+	/**
+	 * Returns a range of all the Documents where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of Documents
+	 * @param end the upper bound of the range of Documents (not inclusive)
+	 * @return the range of matching Documents
+	 * @throws SystemException if a system exception occurred
+	 */
+	public List<Document> findByUuid(String uuid, int start, int end)
+		throws SystemException {
+		return findByUuid(uuid, start, end, null);
+	}
+
+	/**
+	 * Returns an ordered range of all the Documents where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param start the lower bound of the range of Documents
+	 * @param end the upper bound of the range of Documents (not inclusive)
+	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
+	 * @return the ordered range of matching Documents
+	 * @throws SystemException if a system exception occurred
+	 */
+	public List<Document> findByUuid(String uuid, int start, int end,
+		OrderByComparator orderByComparator) throws SystemException {
+		FinderPath finderPath = null;
+		Object[] finderArgs = null;
+
+		if ((start == QueryUtil.ALL_POS) && (end == QueryUtil.ALL_POS) &&
+				(orderByComparator == null)) {
+			finderPath = FINDER_PATH_WITHOUT_PAGINATION_FIND_BY_UUID;
+			finderArgs = new Object[] { uuid };
+		}
+		else {
+			finderPath = FINDER_PATH_WITH_PAGINATION_FIND_BY_UUID;
+			finderArgs = new Object[] { uuid, start, end, orderByComparator };
+		}
+
+		List<Document> list = (List<Document>)FinderCacheUtil.getResult(finderPath,
+				finderArgs, this);
+
+		if (list == null) {
+			StringBundler query = null;
+
+			if (orderByComparator != null) {
+				query = new StringBundler(3 +
+						(orderByComparator.getOrderByFields().length * 3));
+			}
+			else {
+				query = new StringBundler(3);
+			}
+
+			query.append(_SQL_SELECT_DOCUMENT_WHERE);
+
+			if (uuid == null) {
+				query.append(_FINDER_COLUMN_UUID_UUID_1);
+			}
+			else {
+				if (uuid.equals(StringPool.BLANK)) {
+					query.append(_FINDER_COLUMN_UUID_UUID_3);
+				}
+				else {
+					query.append(_FINDER_COLUMN_UUID_UUID_2);
+				}
+			}
+
+			if (orderByComparator != null) {
+				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
+					orderByComparator);
+			}
+
+			else {
+				query.append(DocumentModelImpl.ORDER_BY_JPQL);
+			}
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (uuid != null) {
+					qPos.add(uuid);
+				}
+
+				list = (List<Document>)QueryUtil.list(q, getDialect(), start,
+						end);
+			}
+			catch (Exception e) {
+				throw processException(e);
+			}
+			finally {
+				if (list == null) {
+					FinderCacheUtil.removeResult(finderPath, finderArgs);
+				}
+				else {
+					cacheResult(list);
+
+					FinderCacheUtil.putResult(finderPath, finderArgs, list);
+				}
+
+				closeSession(session);
+			}
+		}
+
+		return list;
+	}
+
+	/**
+	 * Returns the first Document in the ordered set where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the first matching Document
+	 * @throws com.maximgalushka.service.NoSuchDocumentException if a matching Document could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document findByUuid_First(String uuid,
+		OrderByComparator orderByComparator)
+		throws NoSuchDocumentException, SystemException {
+		List<Document> list = findByUuid(uuid, 0, 1, orderByComparator);
+
+		if (list.isEmpty()) {
+			StringBundler msg = new StringBundler(4);
+
+			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			msg.append("uuid=");
+			msg.append(uuid);
+
+			msg.append(StringPool.CLOSE_CURLY_BRACE);
+
+			throw new NoSuchDocumentException(msg.toString());
+		}
+		else {
+			return list.get(0);
+		}
+	}
+
+	/**
+	 * Returns the last Document in the ordered set where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
+	 * </p>
+	 *
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the last matching Document
+	 * @throws com.maximgalushka.service.NoSuchDocumentException if a matching Document could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document findByUuid_Last(String uuid,
+		OrderByComparator orderByComparator)
+		throws NoSuchDocumentException, SystemException {
+		int count = countByUuid(uuid);
+
+		List<Document> list = findByUuid(uuid, count - 1, count,
+				orderByComparator);
+
+		if (list.isEmpty()) {
+			StringBundler msg = new StringBundler(4);
+
+			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			msg.append("uuid=");
+			msg.append(uuid);
+
+			msg.append(StringPool.CLOSE_CURLY_BRACE);
+
+			throw new NoSuchDocumentException(msg.toString());
+		}
+		else {
+			return list.get(0);
+		}
+	}
+
+	/**
+	 * Returns the Documents before and after the current Document in the ordered set where uuid = &#63;.
+	 *
+	 * <p>
+	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
+	 * </p>
+	 *
+	 * @param documentId the primary key of the current Document
+	 * @param uuid the uuid
+	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
+	 * @return the previous, current, and next Document
+	 * @throws com.maximgalushka.service.NoSuchDocumentException if a Document with the primary key could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document[] findByUuid_PrevAndNext(long documentId, String uuid,
+		OrderByComparator orderByComparator)
+		throws NoSuchDocumentException, SystemException {
+		Document document = findByPrimaryKey(documentId);
+
+		Session session = null;
+
+		try {
+			session = openSession();
+
+			Document[] array = new DocumentImpl[3];
+
+			array[0] = getByUuid_PrevAndNext(session, document, uuid,
+					orderByComparator, true);
+
+			array[1] = document;
+
+			array[2] = getByUuid_PrevAndNext(session, document, uuid,
+					orderByComparator, false);
+
+			return array;
+		}
+		catch (Exception e) {
+			throw processException(e);
+		}
+		finally {
+			closeSession(session);
+		}
+	}
+
+	protected Document getByUuid_PrevAndNext(Session session,
+		Document document, String uuid, OrderByComparator orderByComparator,
+		boolean previous) {
+		StringBundler query = null;
+
+		if (orderByComparator != null) {
+			query = new StringBundler(6 +
+					(orderByComparator.getOrderByFields().length * 6));
+		}
+		else {
+			query = new StringBundler(3);
+		}
+
+		query.append(_SQL_SELECT_DOCUMENT_WHERE);
+
+		if (uuid == null) {
+			query.append(_FINDER_COLUMN_UUID_UUID_1);
+		}
+		else {
+			if (uuid.equals(StringPool.BLANK)) {
+				query.append(_FINDER_COLUMN_UUID_UUID_3);
+			}
+			else {
+				query.append(_FINDER_COLUMN_UUID_UUID_2);
+			}
+		}
+
+		if (orderByComparator != null) {
+			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
+
+			if (orderByConditionFields.length > 0) {
+				query.append(WHERE_AND);
+			}
+
+			for (int i = 0; i < orderByConditionFields.length; i++) {
+				query.append(_ORDER_BY_ENTITY_ALIAS);
+				query.append(orderByConditionFields[i]);
+
+				if ((i + 1) < orderByConditionFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(WHERE_GREATER_THAN_HAS_NEXT);
+					}
+					else {
+						query.append(WHERE_LESSER_THAN_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(WHERE_GREATER_THAN);
+					}
+					else {
+						query.append(WHERE_LESSER_THAN);
+					}
+				}
+			}
+
+			query.append(ORDER_BY_CLAUSE);
+
+			String[] orderByFields = orderByComparator.getOrderByFields();
+
+			for (int i = 0; i < orderByFields.length; i++) {
+				query.append(_ORDER_BY_ENTITY_ALIAS);
+				query.append(orderByFields[i]);
+
+				if ((i + 1) < orderByFields.length) {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(ORDER_BY_ASC_HAS_NEXT);
+					}
+					else {
+						query.append(ORDER_BY_DESC_HAS_NEXT);
+					}
+				}
+				else {
+					if (orderByComparator.isAscending() ^ previous) {
+						query.append(ORDER_BY_ASC);
+					}
+					else {
+						query.append(ORDER_BY_DESC);
+					}
+				}
+			}
+		}
+
+		else {
+			query.append(DocumentModelImpl.ORDER_BY_JPQL);
+		}
+
+		String sql = query.toString();
+
+		Query q = session.createQuery(sql);
+
+		q.setFirstResult(0);
+		q.setMaxResults(2);
+
+		QueryPos qPos = QueryPos.getInstance(q);
+
+		if (uuid != null) {
+			qPos.add(uuid);
+		}
+
+		if (orderByComparator != null) {
+			Object[] values = orderByComparator.getOrderByConditionValues(document);
+
+			for (Object value : values) {
+				qPos.add(value);
+			}
+		}
+
+		List<Document> list = q.list();
+
+		if (list.size() == 2) {
+			return list.get(1);
+		}
+		else {
+			return null;
+		}
+	}
+
+	/**
+	 * Returns the Document where uuid = &#63; and groupId = &#63; or throws a {@link com.maximgalushka.service.NoSuchDocumentException} if it could not be found.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching Document
+	 * @throws com.maximgalushka.service.NoSuchDocumentException if a matching Document could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document findByUUID_G(String uuid, long groupId)
+		throws NoSuchDocumentException, SystemException {
+		Document document = fetchByUUID_G(uuid, groupId);
+
+		if (document == null) {
+			StringBundler msg = new StringBundler(6);
+
+			msg.append(_NO_SUCH_ENTITY_WITH_KEY);
+
+			msg.append("uuid=");
+			msg.append(uuid);
+
+			msg.append(", groupId=");
+			msg.append(groupId);
+
+			msg.append(StringPool.CLOSE_CURLY_BRACE);
+
+			if (_log.isWarnEnabled()) {
+				_log.warn(msg.toString());
+			}
+
+			throw new NoSuchDocumentException(msg.toString());
+		}
+
+		return document;
+	}
+
+	/**
+	 * Returns the Document where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found. Uses the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the matching Document, or <code>null</code> if a matching Document could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document fetchByUUID_G(String uuid, long groupId)
+		throws SystemException {
+		return fetchByUUID_G(uuid, groupId, true);
+	}
+
+	/**
+	 * Returns the Document where uuid = &#63; and groupId = &#63; or returns <code>null</code> if it could not be found, optionally using the finder cache.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @param retrieveFromCache whether to use the finder cache
+	 * @return the matching Document, or <code>null</code> if a matching Document could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document fetchByUUID_G(String uuid, long groupId,
+		boolean retrieveFromCache) throws SystemException {
+		Object[] finderArgs = new Object[] { uuid, groupId };
+
+		Object result = null;
+
+		if (retrieveFromCache) {
+			result = FinderCacheUtil.getResult(FINDER_PATH_FETCH_BY_UUID_G,
+					finderArgs, this);
+		}
+
+		if (result == null) {
+			StringBundler query = new StringBundler(4);
+
+			query.append(_SQL_SELECT_DOCUMENT_WHERE);
+
+			if (uuid == null) {
+				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
+			}
+			else {
+				if (uuid.equals(StringPool.BLANK)) {
+					query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				}
+				else {
+					query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				}
+			}
+
+			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+
+			query.append(DocumentModelImpl.ORDER_BY_JPQL);
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (uuid != null) {
+					qPos.add(uuid);
+				}
+
+				qPos.add(groupId);
+
+				List<Document> list = q.list();
+
+				result = list;
+
+				Document document = null;
+
+				if (list.isEmpty()) {
+					FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_UUID_G,
+						finderArgs, list);
+				}
+				else {
+					document = list.get(0);
+
+					cacheResult(document);
+
+					if ((document.getUuid() == null) ||
+							!document.getUuid().equals(uuid) ||
+							(document.getGroupId() != groupId)) {
+						FinderCacheUtil.putResult(FINDER_PATH_FETCH_BY_UUID_G,
+							finderArgs, document);
+					}
+				}
+
+				return document;
+			}
+			catch (Exception e) {
+				throw processException(e);
+			}
+			finally {
+				if (result == null) {
+					FinderCacheUtil.removeResult(FINDER_PATH_FETCH_BY_UUID_G,
+						finderArgs);
+				}
+
+				closeSession(session);
+			}
+		}
+		else {
+			if (result instanceof List<?>) {
+				return null;
+			}
+			else {
+				return (Document)result;
+			}
+		}
 	}
 
 	/**
@@ -821,339 +1438,6 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 	}
 
 	/**
-	 * Returns all the Documents that the user has permission to view where title = &#63;.
-	 *
-	 * @param title the title
-	 * @return the matching Documents that the user has permission to view
-	 * @throws SystemException if a system exception occurred
-	 */
-	public List<Document> filterFindBytitle(String title)
-		throws SystemException {
-		return filterFindBytitle(title, QueryUtil.ALL_POS, QueryUtil.ALL_POS,
-			null);
-	}
-
-	/**
-	 * Returns a range of all the Documents that the user has permission to view where title = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
-	 * </p>
-	 *
-	 * @param title the title
-	 * @param start the lower bound of the range of Documents
-	 * @param end the upper bound of the range of Documents (not inclusive)
-	 * @return the range of matching Documents that the user has permission to view
-	 * @throws SystemException if a system exception occurred
-	 */
-	public List<Document> filterFindBytitle(String title, int start, int end)
-		throws SystemException {
-		return filterFindBytitle(title, start, end, null);
-	}
-
-	/**
-	 * Returns an ordered range of all the Documents that the user has permissions to view where title = &#63;.
-	 *
-	 * <p>
-	 * Useful when paginating results. Returns a maximum of <code>end - start</code> instances. <code>start</code> and <code>end</code> are not primary keys, they are indexes in the result set. Thus, <code>0</code> refers to the first result in the set. Setting both <code>start</code> and <code>end</code> to {@link com.liferay.portal.kernel.dao.orm.QueryUtil#ALL_POS} will return the full result set.
-	 * </p>
-	 *
-	 * @param title the title
-	 * @param start the lower bound of the range of Documents
-	 * @param end the upper bound of the range of Documents (not inclusive)
-	 * @param orderByComparator the comparator to order the results by (optionally <code>null</code>)
-	 * @return the ordered range of matching Documents that the user has permission to view
-	 * @throws SystemException if a system exception occurred
-	 */
-	public List<Document> filterFindBytitle(String title, int start, int end,
-		OrderByComparator orderByComparator) throws SystemException {
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return findBytitle(title, start, end, orderByComparator);
-		}
-
-		StringBundler query = null;
-
-		if (orderByComparator != null) {
-			query = new StringBundler(3 +
-					(orderByComparator.getOrderByFields().length * 3));
-		}
-		else {
-			query = new StringBundler(3);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_WHERE);
-		}
-		else {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		if (title == null) {
-			query.append(_FINDER_COLUMN_TITLE_TITLE_1);
-		}
-		else {
-			if (title.equals(StringPool.BLANK)) {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_3);
-			}
-			else {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_2);
-			}
-		}
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			if (getDB().isSupportsInlineDistinct()) {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_ALIAS,
-					orderByComparator);
-			}
-			else {
-				appendOrderByComparator(query, _ORDER_BY_ENTITY_TABLE,
-					orderByComparator);
-			}
-		}
-
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				query.append(DocumentModelImpl.ORDER_BY_JPQL);
-			}
-			else {
-				query.append(DocumentModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Document.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery q = session.createSQLQuery(sql);
-
-			if (getDB().isSupportsInlineDistinct()) {
-				q.addEntity(_FILTER_ENTITY_ALIAS, DocumentImpl.class);
-			}
-			else {
-				q.addEntity(_FILTER_ENTITY_TABLE, DocumentImpl.class);
-			}
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (title != null) {
-				qPos.add(title);
-			}
-
-			return (List<Document>)QueryUtil.list(q, getDialect(), start, end);
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	/**
-	 * Returns the Documents before and after the current Document in the ordered set of Documents that the user has permission to view where title = &#63;.
-	 *
-	 * @param documentId the primary key of the current Document
-	 * @param title the title
-	 * @param orderByComparator the comparator to order the set by (optionally <code>null</code>)
-	 * @return the previous, current, and next Document
-	 * @throws com.maximgalushka.service.NoSuchDocumentException if a Document with the primary key could not be found
-	 * @throws SystemException if a system exception occurred
-	 */
-	public Document[] filterFindBytitle_PrevAndNext(long documentId,
-		String title, OrderByComparator orderByComparator)
-		throws NoSuchDocumentException, SystemException {
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return findBytitle_PrevAndNext(documentId, title, orderByComparator);
-		}
-
-		Document document = findByPrimaryKey(documentId);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			Document[] array = new DocumentImpl[3];
-
-			array[0] = filterGetBytitle_PrevAndNext(session, document, title,
-					orderByComparator, true);
-
-			array[1] = document;
-
-			array[2] = filterGetBytitle_PrevAndNext(session, document, title,
-					orderByComparator, false);
-
-			return array;
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
-	}
-
-	protected Document filterGetBytitle_PrevAndNext(Session session,
-		Document document, String title, OrderByComparator orderByComparator,
-		boolean previous) {
-		StringBundler query = null;
-
-		if (orderByComparator != null) {
-			query = new StringBundler(6 +
-					(orderByComparator.getOrderByFields().length * 6));
-		}
-		else {
-			query = new StringBundler(3);
-		}
-
-		if (getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_WHERE);
-		}
-		else {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_1);
-		}
-
-		if (title == null) {
-			query.append(_FINDER_COLUMN_TITLE_TITLE_1);
-		}
-		else {
-			if (title.equals(StringPool.BLANK)) {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_3);
-			}
-			else {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_2);
-			}
-		}
-
-		if (!getDB().isSupportsInlineDistinct()) {
-			query.append(_FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_2);
-		}
-
-		if (orderByComparator != null) {
-			String[] orderByConditionFields = orderByComparator.getOrderByConditionFields();
-
-			if (orderByConditionFields.length > 0) {
-				query.append(WHERE_AND);
-			}
-
-			for (int i = 0; i < orderByConditionFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
-				}
-				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
-				}
-
-				query.append(orderByConditionFields[i]);
-
-				if ((i + 1) < orderByConditionFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN_HAS_NEXT);
-					}
-					else {
-						query.append(WHERE_LESSER_THAN_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						query.append(WHERE_GREATER_THAN);
-					}
-					else {
-						query.append(WHERE_LESSER_THAN);
-					}
-				}
-			}
-
-			query.append(ORDER_BY_CLAUSE);
-
-			String[] orderByFields = orderByComparator.getOrderByFields();
-
-			for (int i = 0; i < orderByFields.length; i++) {
-				if (getDB().isSupportsInlineDistinct()) {
-					query.append(_ORDER_BY_ENTITY_ALIAS);
-				}
-				else {
-					query.append(_ORDER_BY_ENTITY_TABLE);
-				}
-
-				query.append(orderByFields[i]);
-
-				if ((i + 1) < orderByFields.length) {
-					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC_HAS_NEXT);
-					}
-					else {
-						query.append(ORDER_BY_DESC_HAS_NEXT);
-					}
-				}
-				else {
-					if (orderByComparator.isAscending() ^ previous) {
-						query.append(ORDER_BY_ASC);
-					}
-					else {
-						query.append(ORDER_BY_DESC);
-					}
-				}
-			}
-		}
-
-		else {
-			if (getDB().isSupportsInlineDistinct()) {
-				query.append(DocumentModelImpl.ORDER_BY_JPQL);
-			}
-			else {
-				query.append(DocumentModelImpl.ORDER_BY_SQL);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Document.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		SQLQuery q = session.createSQLQuery(sql);
-
-		q.setFirstResult(0);
-		q.setMaxResults(2);
-
-		if (getDB().isSupportsInlineDistinct()) {
-			q.addEntity(_FILTER_ENTITY_ALIAS, DocumentImpl.class);
-		}
-		else {
-			q.addEntity(_FILTER_ENTITY_TABLE, DocumentImpl.class);
-		}
-
-		QueryPos qPos = QueryPos.getInstance(q);
-
-		if (title != null) {
-			qPos.add(title);
-		}
-
-		if (orderByComparator != null) {
-			Object[] values = orderByComparator.getOrderByConditionValues(document);
-
-			for (Object value : values) {
-				qPos.add(value);
-			}
-		}
-
-		List<Document> list = q.list();
-
-		if (list.size() == 2) {
-			return list.get(1);
-		}
-		else {
-			return null;
-		}
-	}
-
-	/**
 	 * Returns all the Documents.
 	 *
 	 * @return the Documents
@@ -1268,6 +1552,32 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 	}
 
 	/**
+	 * Removes all the Documents where uuid = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @throws SystemException if a system exception occurred
+	 */
+	public void removeByUuid(String uuid) throws SystemException {
+		for (Document document : findByUuid(uuid)) {
+			remove(document);
+		}
+	}
+
+	/**
+	 * Removes the Document where uuid = &#63; and groupId = &#63; from the database.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @throws SystemException if a system exception occurred
+	 */
+	public void removeByUUID_G(String uuid, long groupId)
+		throws NoSuchDocumentException, SystemException {
+		Document document = findByUUID_G(uuid, groupId);
+
+		remove(document);
+	}
+
+	/**
 	 * Removes all the Documents where title = &#63; from the database.
 	 *
 	 * @param title the title
@@ -1288,6 +1598,142 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		for (Document document : findAll()) {
 			remove(document);
 		}
+	}
+
+	/**
+	 * Returns the number of Documents where uuid = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @return the number of matching Documents
+	 * @throws SystemException if a system exception occurred
+	 */
+	public int countByUuid(String uuid) throws SystemException {
+		Object[] finderArgs = new Object[] { uuid };
+
+		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_BY_UUID,
+				finderArgs, this);
+
+		if (count == null) {
+			StringBundler query = new StringBundler(2);
+
+			query.append(_SQL_COUNT_DOCUMENT_WHERE);
+
+			if (uuid == null) {
+				query.append(_FINDER_COLUMN_UUID_UUID_1);
+			}
+			else {
+				if (uuid.equals(StringPool.BLANK)) {
+					query.append(_FINDER_COLUMN_UUID_UUID_3);
+				}
+				else {
+					query.append(_FINDER_COLUMN_UUID_UUID_2);
+				}
+			}
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (uuid != null) {
+					qPos.add(uuid);
+				}
+
+				count = (Long)q.uniqueResult();
+			}
+			catch (Exception e) {
+				throw processException(e);
+			}
+			finally {
+				if (count == null) {
+					count = Long.valueOf(0);
+				}
+
+				FinderCacheUtil.putResult(FINDER_PATH_COUNT_BY_UUID,
+					finderArgs, count);
+
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
+	}
+
+	/**
+	 * Returns the number of Documents where uuid = &#63; and groupId = &#63;.
+	 *
+	 * @param uuid the uuid
+	 * @param groupId the group ID
+	 * @return the number of matching Documents
+	 * @throws SystemException if a system exception occurred
+	 */
+	public int countByUUID_G(String uuid, long groupId)
+		throws SystemException {
+		Object[] finderArgs = new Object[] { uuid, groupId };
+
+		Long count = (Long)FinderCacheUtil.getResult(FINDER_PATH_COUNT_BY_UUID_G,
+				finderArgs, this);
+
+		if (count == null) {
+			StringBundler query = new StringBundler(3);
+
+			query.append(_SQL_COUNT_DOCUMENT_WHERE);
+
+			if (uuid == null) {
+				query.append(_FINDER_COLUMN_UUID_G_UUID_1);
+			}
+			else {
+				if (uuid.equals(StringPool.BLANK)) {
+					query.append(_FINDER_COLUMN_UUID_G_UUID_3);
+				}
+				else {
+					query.append(_FINDER_COLUMN_UUID_G_UUID_2);
+				}
+			}
+
+			query.append(_FINDER_COLUMN_UUID_G_GROUPID_2);
+
+			String sql = query.toString();
+
+			Session session = null;
+
+			try {
+				session = openSession();
+
+				Query q = session.createQuery(sql);
+
+				QueryPos qPos = QueryPos.getInstance(q);
+
+				if (uuid != null) {
+					qPos.add(uuid);
+				}
+
+				qPos.add(groupId);
+
+				count = (Long)q.uniqueResult();
+			}
+			catch (Exception e) {
+				throw processException(e);
+			}
+			finally {
+				if (count == null) {
+					count = Long.valueOf(0);
+				}
+
+				FinderCacheUtil.putResult(FINDER_PATH_COUNT_BY_UUID_G,
+					finderArgs, count);
+
+				closeSession(session);
+			}
+		}
+
+		return count.intValue();
 	}
 
 	/**
@@ -1353,65 +1799,6 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 		}
 
 		return count.intValue();
-	}
-
-	/**
-	 * Returns the number of Documents that the user has permission to view where title = &#63;.
-	 *
-	 * @param title the title
-	 * @return the number of matching Documents that the user has permission to view
-	 * @throws SystemException if a system exception occurred
-	 */
-	public int filterCountBytitle(String title) throws SystemException {
-		if (!InlineSQLHelperUtil.isEnabled()) {
-			return countBytitle(title);
-		}
-
-		StringBundler query = new StringBundler(2);
-
-		query.append(_FILTER_SQL_COUNT_DOCUMENT_WHERE);
-
-		if (title == null) {
-			query.append(_FINDER_COLUMN_TITLE_TITLE_1);
-		}
-		else {
-			if (title.equals(StringPool.BLANK)) {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_3);
-			}
-			else {
-				query.append(_FINDER_COLUMN_TITLE_TITLE_2);
-			}
-		}
-
-		String sql = InlineSQLHelperUtil.replacePermissionCheck(query.toString(),
-				Document.class.getName(), _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN);
-
-		Session session = null;
-
-		try {
-			session = openSession();
-
-			SQLQuery q = session.createSQLQuery(sql);
-
-			q.addScalar(COUNT_COLUMN_NAME,
-				com.liferay.portal.kernel.dao.orm.Type.LONG);
-
-			QueryPos qPos = QueryPos.getInstance(q);
-
-			if (title != null) {
-				qPos.add(title);
-			}
-
-			Long count = (Long)q.uniqueResult();
-
-			return count.intValue();
-		}
-		catch (Exception e) {
-			throw processException(e);
-		}
-		finally {
-			closeSession(session);
-		}
 	}
 
 	/**
@@ -1491,24 +1878,23 @@ public class DocumentPersistenceImpl extends BasePersistenceImpl<Document>
 	protected ResourcePersistence resourcePersistence;
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
+	@BeanReference(type = AssetEntryPersistence.class)
+	protected AssetEntryPersistence assetEntryPersistence;
 	private static final String _SQL_SELECT_DOCUMENT = "SELECT document FROM Document document";
 	private static final String _SQL_SELECT_DOCUMENT_WHERE = "SELECT document FROM Document document WHERE ";
 	private static final String _SQL_COUNT_DOCUMENT = "SELECT COUNT(document) FROM Document document";
 	private static final String _SQL_COUNT_DOCUMENT_WHERE = "SELECT COUNT(document) FROM Document document WHERE ";
+	private static final String _FINDER_COLUMN_UUID_UUID_1 = "document.uuid IS NULL";
+	private static final String _FINDER_COLUMN_UUID_UUID_2 = "document.uuid = ?";
+	private static final String _FINDER_COLUMN_UUID_UUID_3 = "(document.uuid IS NULL OR document.uuid = ?)";
+	private static final String _FINDER_COLUMN_UUID_G_UUID_1 = "document.uuid IS NULL AND ";
+	private static final String _FINDER_COLUMN_UUID_G_UUID_2 = "document.uuid = ? AND ";
+	private static final String _FINDER_COLUMN_UUID_G_UUID_3 = "(document.uuid IS NULL OR document.uuid = ?) AND ";
+	private static final String _FINDER_COLUMN_UUID_G_GROUPID_2 = "document.groupId = ?";
 	private static final String _FINDER_COLUMN_TITLE_TITLE_1 = "document.title IS NULL";
 	private static final String _FINDER_COLUMN_TITLE_TITLE_2 = "document.title = ?";
 	private static final String _FINDER_COLUMN_TITLE_TITLE_3 = "(document.title IS NULL OR document.title = ?)";
-	private static final String _FILTER_ENTITY_TABLE_FILTER_PK_COLUMN = "document.documentId";
-	private static final String _FILTER_SQL_SELECT_DOCUMENT_WHERE = "SELECT DISTINCT {document.*} FROM docs_Document document WHERE ";
-	private static final String _FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_1 =
-		"SELECT {docs_Document.*} FROM (SELECT DISTINCT document.documentId FROM docs_Document document WHERE ";
-	private static final String _FILTER_SQL_SELECT_DOCUMENT_NO_INLINE_DISTINCT_WHERE_2 =
-		") TEMP_TABLE INNER JOIN docs_Document ON TEMP_TABLE.documentId = docs_Document.documentId";
-	private static final String _FILTER_SQL_COUNT_DOCUMENT_WHERE = "SELECT COUNT(DISTINCT document.documentId) AS COUNT_VALUE FROM docs_Document document WHERE ";
-	private static final String _FILTER_ENTITY_ALIAS = "document";
-	private static final String _FILTER_ENTITY_TABLE = "docs_Document";
 	private static final String _ORDER_BY_ENTITY_ALIAS = "document.";
-	private static final String _ORDER_BY_ENTITY_TABLE = "docs_Document.";
 	private static final String _NO_SUCH_ENTITY_WITH_PRIMARY_KEY = "No Document exists with the primary key ";
 	private static final String _NO_SUCH_ENTITY_WITH_KEY = "No Document exists with the key {";
 	private static final boolean _HIBERNATE_CACHE_USE_SECOND_LEVEL_CACHE = GetterUtil.getBoolean(PropsUtil.get(

@@ -4,7 +4,7 @@
 	<author>mgalushka</author>
 	<namespace>docs</namespace>
 
-	<entity name="Document" local-service="true" remote-service="false" human-name="Document">
+	<entity name="Document" uuid="true" local-service="true" remote-service="false" human-name="Document">
 
 		<!-- PK fields -->
 
@@ -13,11 +13,12 @@
 		<!-- Audit fields -->
 
 		<column name="companyId" type="long"></column>
-		<column name="userId" type="long"></column>
+		<column name="groupId" type="long"></column>
 
 		<!-- Other fields -->
 
 		<!-- Order -->
+        <column name="userId" type="long"></column>
         <column name="title" type="String" />
         <column name="type" type="String" />
         <column name="status" type="int"></column>
@@ -31,6 +32,11 @@
 		<finder name="title" return-type="Collection">
 			<finder-column name="title" />
 		</finder>
+		
+		<!-- References -->
+		<reference package-path="com.liferay.portal" entity="User" />
+		<reference package-path="com.liferay.portlet.asset"
+		entity="AssetEntry" />
 	</entity>
     <entity name="History" human-name="History">
         <column name="logId" type="long" primary="true" id-type="increment"></column>

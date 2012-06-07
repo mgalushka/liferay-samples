@@ -30,6 +30,7 @@ public class Util {
 	    ThemeDisplay theme = (ThemeDisplay) request.getAttribute(WebKeys.THEME_DISPLAY);
 	    document.setCompanyId(theme.getCompanyId());
 	    document.setUserId(theme.getUserId());
+	    document.setGroupId(theme.getLayout().getGroupId());
 	    
 	    return document;
 	}

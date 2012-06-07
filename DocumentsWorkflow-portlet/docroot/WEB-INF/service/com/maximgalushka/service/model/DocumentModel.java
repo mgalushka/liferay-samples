@@ -59,6 +59,21 @@ public interface DocumentModel extends BaseModel<Document> {
 	public void setPrimaryKey(long primaryKey);
 
 	/**
+	 * Returns the uuid of this Document.
+	 *
+	 * @return the uuid of this Document
+	 */
+	@AutoEscape
+	public String getUuid();
+
+	/**
+	 * Sets the uuid of this Document.
+	 *
+	 * @param uuid the uuid of this Document
+	 */
+	public void setUuid(String uuid);
+
+	/**
 	 * Returns the document ID of this Document.
 	 *
 	 * @return the document ID of this Document
@@ -85,6 +100,20 @@ public interface DocumentModel extends BaseModel<Document> {
 	 * @param companyId the company ID of this Document
 	 */
 	public void setCompanyId(long companyId);
+
+	/**
+	 * Returns the group ID of this Document.
+	 *
+	 * @return the group ID of this Document
+	 */
+	public long getGroupId();
+
+	/**
+	 * Sets the group ID of this Document.
+	 *
+	 * @param groupId the group ID of this Document
+	 */
+	public void setGroupId(long groupId);
 
 	/**
 	 * Returns the user ID of this Document.

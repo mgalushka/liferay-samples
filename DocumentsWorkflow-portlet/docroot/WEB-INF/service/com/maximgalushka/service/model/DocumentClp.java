@@ -57,6 +57,14 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		setPrimaryKey(((Long)primaryKeyObj).longValue());
 	}
 
+	public String getUuid() {
+		return _uuid;
+	}
+
+	public void setUuid(String uuid) {
+		_uuid = uuid;
+	}
+
 	public long getDocumentId() {
 		return _documentId;
 	}
@@ -71,6 +79,14 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 
 	public void setCompanyId(long companyId) {
 		_companyId = companyId;
+	}
+
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	public void setGroupId(long groupId) {
+		_groupId = groupId;
 	}
 
 	public long getUserId() {
@@ -132,8 +148,10 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 	public Object clone() {
 		DocumentClp clone = new DocumentClp();
 
+		clone.setUuid(getUuid());
 		clone.setDocumentId(getDocumentId());
 		clone.setCompanyId(getCompanyId());
+		clone.setGroupId(getGroupId());
 		clone.setUserId(getUserId());
 		clone.setTitle(getTitle());
 		clone.setType(getType());
@@ -196,12 +214,16 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(13);
+		StringBundler sb = new StringBundler(17);
 
-		sb.append("{documentId=");
+		sb.append("{uuid=");
+		sb.append(getUuid());
+		sb.append(", documentId=");
 		sb.append(getDocumentId());
 		sb.append(", companyId=");
 		sb.append(getCompanyId());
+		sb.append(", groupId=");
+		sb.append(getGroupId());
 		sb.append(", userId=");
 		sb.append(getUserId());
 		sb.append(", title=");
@@ -216,12 +238,16 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(22);
+		StringBundler sb = new StringBundler(28);
 
 		sb.append("<model><model-name>");
 		sb.append("com.maximgalushka.service.model.Document");
 		sb.append("</model-name>");
 
+		sb.append(
+			"<column><column-name>uuid</column-name><column-value><![CDATA[");
+		sb.append(getUuid());
+		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>documentId</column-name><column-value><![CDATA[");
 		sb.append(getDocumentId());
@@ -229,6 +255,10 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		sb.append(
 			"<column><column-name>companyId</column-name><column-value><![CDATA[");
 		sb.append(getCompanyId());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>groupId</column-name><column-value><![CDATA[");
+		sb.append(getGroupId());
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userId</column-name><column-value><![CDATA[");
@@ -252,8 +282,10 @@ public class DocumentClp extends BaseModelImpl<Document> implements Document {
 		return sb.toString();
 	}
 
+	private String _uuid;
 	private long _documentId;
 	private long _companyId;
+	private long _groupId;
 	private long _userId;
 	private String _userUuid;
 	private String _title;

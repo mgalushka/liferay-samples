@@ -18,6 +18,8 @@ import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 import com.liferay.portal.kernel.workflow.WorkflowHandlerRegistryUtil;
+import com.liferay.portal.model.User;
+import com.liferay.portal.service.ServiceContext;
 import com.maximgalushka.service.model.Document;
 import com.maximgalushka.service.service.base.DocumentLocalServiceBaseImpl;
 
@@ -40,7 +42,7 @@ import com.maximgalushka.service.service.base.DocumentLocalServiceBaseImpl;
  * @see com.maximgalushka.service.service.DocumentLocalServiceUtil
  */
 public class DocumentLocalServiceImpl extends DocumentLocalServiceBaseImpl {
-	
+
 	/*
 	 * NOTE FOR DEVELOPERS:
 	 * 
@@ -49,42 +51,87 @@ public class DocumentLocalServiceImpl extends DocumentLocalServiceBaseImpl {
 	 * Document local service.
 	 */
 
-	public Document addDocument(Document document) throws SystemException {
+	public Document addDocument(Document document, ServiceContext serviceContext)
+			throws SystemException {
 
-		super.addDocument(document);
-		
+		Document newInstance = documentPersistence.create(counterLocalService
+				.increment(Document.class.getName()));
+		newInstance.setStatus(WorkflowConstants.STATUS_DRAFT);
+		newInstance.setTitle(document.getTitle());
+		newInstance.setUserId(document.getUserId());
+		newInstance.setCompanyId(document.getCompanyId());
+		newInstance.setGroupId(document.getGroupId());
+		newInstance.setType(document.getType());
+
+		documentPersistence.update(newInstance, false);
+
 		try {
-			resourceLocalService.addResources(document.getCompanyId(), 0,
-					document.getUserId(), Document.class.getName(),
-					document.getPrimaryKey(), false, true, true);		
-			
+			resourceLocalService.addResources(newInstance.getCompanyId(),
+					newInstance.getGroupId(), newInstance.getUserId(),
+					Document.class.getName(), newInstance.getPrimaryKey(), false,
+					true, true);
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
 		try {
-			document.setStatus(WorkflowConstants.STATUS_DRAFT);
-			WorkflowHandlerRegistryUtil.startWorkflowInstance(document.getCompanyId(), 
-					document.getUserId(), Document.class.getName(), document.getPrimaryKey(), 
-					document, null);
-			
+			// assetEntryLocalService.addAssetEntry();
+//			assetEntryLocalService.createAssetEntry(entryId)
+			assetEntryLocalService.updateEntry(newInstance.getUserId(),
+					newInstance.getGroupId(), Document.class.getName(),
+					newInstance.getPrimaryKey(),
+					serviceContext.getAssetCategoryIds(),
+					serviceContext.getAssetTagNames());
+		} catch (PortalException e1) {
+			e1.printStackTrace();
+		}
+
+		try {
+			WorkflowHandlerRegistryUtil.startWorkflowInstance(
+					newInstance.getCompanyId(), newInstance.getUserId(),
+					Document.class.getName(), newInstance.getPrimaryKey(),
+					newInstance, serviceContext);
+
 		} catch (PortalException e) {
 			e.printStackTrace();
 		}
-		
-		
+
 		return document;
 	}
-	
+
+	public Document updateStatus(long userId, 
+						 long resourcePrimKey, int status,
+						 ServiceContext serviceContext) 
+								 throws SystemException, PortalException {
+
+		// TODO: to attach user who moves the workflow status
+		User user = userLocalService.getUser(userId);
+		Document document = getDocument(resourcePrimKey);
+		document.setStatus(status);
+		documentPersistence.update(document, false);
+		
+		if (status == WorkflowConstants.STATUS_APPROVED) {
+			assetEntryLocalService.updateVisible(Document.class.getName(),
+					resourcePrimKey, true);
+		} else {
+			assetEntryLocalService.updateVisible(Document.class.getName(),
+					resourcePrimKey, false);
+		}
+		return document;
+	}
+
 	public void deleteDocument(Document document) throws SystemException {
 		super.deleteDocument(document);
-		
+
 		try {
-			resourceLocalService.deleteResource(
-					document.getCompanyId(),
-					Document.class.getName(),
-					4,
+			resourceLocalService.deleteResource(document.getCompanyId(),
+					Document.class.getName(), 4,
 					Long.toString(document.getPrimaryKey()));
+
+			assetEntryLocalService.deleteEntry(Document.class.getName(),
+					document.getPrimaryKey());
+
 		} catch (PortalException e) {
 			e.printStackTrace();
 		}

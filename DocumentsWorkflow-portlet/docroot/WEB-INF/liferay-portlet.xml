@@ -5,6 +5,12 @@
 	<portlet>
 		<portlet-name>DocumentsWorkflow</portlet-name>
 		<icon>/icon.png</icon>
+		<asset-renderer-factory>
+			com.maximgalushka.renderer.WorkflowDocumentRendererFactory
+		</asset-renderer-factory>
+		<workflow-handler>
+			com.maximgalushka.workflow.DocumentWorkflowHandler
+		</workflow-handler>
 		<instanceable>false</instanceable>
 		<header-portlet-css>/css/main.css</header-portlet-css>
 		<footer-portlet-javascript>/js/main.js</footer-portlet-javascript>

@@ -57,14 +57,16 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	 */
 	public static final String TABLE_NAME = "docs_Document";
 	public static final Object[][] TABLE_COLUMNS = {
+			{ "uuid_", Types.VARCHAR },
 			{ "documentId", Types.BIGINT },
 			{ "companyId", Types.BIGINT },
+			{ "groupId", Types.BIGINT },
 			{ "userId", Types.BIGINT },
 			{ "title", Types.VARCHAR },
 			{ "type_", Types.VARCHAR },
 			{ "status", Types.INTEGER }
 		};
-	public static final String TABLE_SQL_CREATE = "create table docs_Document (documentId LONG not null primary key,companyId LONG,userId LONG,title VARCHAR(75) null,type_ VARCHAR(75) null,status INTEGER)";
+	public static final String TABLE_SQL_CREATE = "create table docs_Document (uuid_ VARCHAR(75) null,documentId LONG not null primary key,companyId LONG,groupId LONG,userId LONG,title VARCHAR(75) null,type_ VARCHAR(75) null,status INTEGER)";
 	public static final String TABLE_SQL_DROP = "drop table docs_Document";
 	public static final String ORDER_BY_JPQL = " ORDER BY document.documentId DESC";
 	public static final String ORDER_BY_SQL = " ORDER BY docs_Document.documentId DESC";
@@ -80,7 +82,9 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	public static final boolean COLUMN_BITMASK_ENABLED = GetterUtil.getBoolean(com.liferay.util.service.ServiceProps.get(
 				"value.object.column.bitmask.enabled.com.maximgalushka.service.model.Document"),
 			true);
-	public static long TITLE_COLUMN_BITMASK = 1L;
+	public static long GROUPID_COLUMN_BITMASK = 1L;
+	public static long TITLE_COLUMN_BITMASK = 2L;
+	public static long UUID_COLUMN_BITMASK = 4L;
 	public static final long LOCK_EXPIRATION_TIME = GetterUtil.getLong(com.liferay.util.service.ServiceProps.get(
 				"lock.expiration.time.com.maximgalushka.service.model.Document"));
 
@@ -111,6 +115,27 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 		return Document.class.getName();
 	}
 
+	public String getUuid() {
+		if (_uuid == null) {
+			return StringPool.BLANK;
+		}
+		else {
+			return _uuid;
+		}
+	}
+
+	public void setUuid(String uuid) {
+		if (_originalUuid == null) {
+			_originalUuid = _uuid;
+		}
+
+		_uuid = uuid;
+	}
+
+	public String getOriginalUuid() {
+		return GetterUtil.getString(_originalUuid);
+	}
+
 	public long getDocumentId() {
 		return _documentId;
 	}
@@ -127,6 +152,26 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 
 	public void setCompanyId(long companyId) {
 		_companyId = companyId;
+	}
+
+	public long getGroupId() {
+		return _groupId;
+	}
+
+	public void setGroupId(long groupId) {
+		_columnBitmask |= GROUPID_COLUMN_BITMASK;
+
+		if (!_setOriginalGroupId) {
+			_setOriginalGroupId = true;
+
+			_originalGroupId = _groupId;
+		}
+
+		_groupId = groupId;
+	}
+
+	public long getOriginalGroupId() {
+		return _originalGroupId;
 	}
 
 	public long getUserId() {
@@ -223,8 +268,10 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	public Object clone() {
 		DocumentImpl documentImpl = new DocumentImpl();
 
+		documentImpl.setUuid(getUuid());
 		documentImpl.setDocumentId(getDocumentId());
 		documentImpl.setCompanyId(getCompanyId());
+		documentImpl.setGroupId(getGroupId());
 		documentImpl.setUserId(getUserId());
 		documentImpl.setTitle(getTitle());
 		documentImpl.setType(getType());
@@ -291,6 +338,12 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	public void resetOriginalValues() {
 		DocumentModelImpl documentModelImpl = this;
 
+		documentModelImpl._originalUuid = documentModelImpl._uuid;
+
+		documentModelImpl._originalGroupId = documentModelImpl._groupId;
+
+		documentModelImpl._setOriginalGroupId = false;
+
 		documentModelImpl._originalTitle = documentModelImpl._title;
 
 		documentModelImpl._columnBitmask = 0;
@@ -300,9 +353,19 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	public CacheModel<Document> toCacheModel() {
 		DocumentCacheModel documentCacheModel = new DocumentCacheModel();
 
+		documentCacheModel.uuid = getUuid();
+
+		String uuid = documentCacheModel.uuid;
+
+		if ((uuid != null) && (uuid.length() == 0)) {
+			documentCacheModel.uuid = null;
+		}
+
 		documentCacheModel.documentId = getDocumentId();
 
 		documentCacheModel.companyId = getCompanyId();
+
+		documentCacheModel.groupId = getGroupId();
 
 		documentCacheModel.userId = getUserId();
 
@@ -329,12 +392,16 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(13);
+		StringBundler sb = new StringBundler(17);
 
-		sb.append("{documentId=");
+		sb.append("{uuid=");
+		sb.append(getUuid());
+		sb.append(", documentId=");
 		sb.append(getDocumentId());
 		sb.append(", companyId=");
 		sb.append(getCompanyId());
+		sb.append(", groupId=");
+		sb.append(getGroupId());
 		sb.append(", userId=");
 		sb.append(getUserId());
 		sb.append(", title=");
@@ -349,12 +416,16 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	}
 
 	public String toXmlString() {
-		StringBundler sb = new StringBundler(22);
+		StringBundler sb = new StringBundler(28);
 
 		sb.append("<model><model-name>");
 		sb.append("com.maximgalushka.service.model.Document");
 		sb.append("</model-name>");
 
+		sb.append(
+			"<column><column-name>uuid</column-name><column-value><![CDATA[");
+		sb.append(getUuid());
+		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>documentId</column-name><column-value><![CDATA[");
 		sb.append(getDocumentId());
@@ -362,6 +433,10 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 		sb.append(
 			"<column><column-name>companyId</column-name><column-value><![CDATA[");
 		sb.append(getCompanyId());
+		sb.append("]]></column-value></column>");
+		sb.append(
+			"<column><column-name>groupId</column-name><column-value><![CDATA[");
+		sb.append(getGroupId());
 		sb.append("]]></column-value></column>");
 		sb.append(
 			"<column><column-name>userId</column-name><column-value><![CDATA[");
@@ -389,8 +464,13 @@ public class DocumentModelImpl extends BaseModelImpl<Document>
 	private static Class<?>[] _escapedModelProxyInterfaces = new Class[] {
 			Document.class
 		};
+	private String _uuid;
+	private String _originalUuid;
 	private long _documentId;
 	private long _companyId;
+	private long _groupId;
+	private long _originalGroupId;
+	private boolean _setOriginalGroupId;
 	private long _userId;
 	private String _userUuid;
 	private String _title;

@@ -65,24 +65,36 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 		_getPersistedModelMethodKey10 = new MethodKey(_classLoaderProxy.getClassName(),
 				"getPersistedModel", java.io.Serializable.class);
 
-		_getDocumentsMethodKey11 = new MethodKey(_classLoaderProxy.getClassName(),
+		_getDocumentByUuidAndGroupIdMethodKey11 = new MethodKey(_classLoaderProxy.getClassName(),
+				"getDocumentByUuidAndGroupId", java.lang.String.class,
+				long.class);
+
+		_getDocumentsMethodKey12 = new MethodKey(_classLoaderProxy.getClassName(),
 				"getDocuments", int.class, int.class);
 
-		_getDocumentsCountMethodKey12 = new MethodKey(_classLoaderProxy.getClassName(),
+		_getDocumentsCountMethodKey13 = new MethodKey(_classLoaderProxy.getClassName(),
 				"getDocumentsCount");
 
-		_updateDocumentMethodKey13 = new MethodKey(_classLoaderProxy.getClassName(),
+		_updateDocumentMethodKey14 = new MethodKey(_classLoaderProxy.getClassName(),
 				"updateDocument", com.maximgalushka.service.model.Document.class);
 
-		_updateDocumentMethodKey14 = new MethodKey(_classLoaderProxy.getClassName(),
+		_updateDocumentMethodKey15 = new MethodKey(_classLoaderProxy.getClassName(),
 				"updateDocument",
 				com.maximgalushka.service.model.Document.class, boolean.class);
 
-		_getBeanIdentifierMethodKey15 = new MethodKey(_classLoaderProxy.getClassName(),
+		_getBeanIdentifierMethodKey16 = new MethodKey(_classLoaderProxy.getClassName(),
 				"getBeanIdentifier");
 
-		_setBeanIdentifierMethodKey16 = new MethodKey(_classLoaderProxy.getClassName(),
+		_setBeanIdentifierMethodKey17 = new MethodKey(_classLoaderProxy.getClassName(),
 				"setBeanIdentifier", java.lang.String.class);
+
+		_addDocumentMethodKey18 = new MethodKey(_classLoaderProxy.getClassName(),
+				"addDocument", com.maximgalushka.service.model.Document.class,
+				com.liferay.portal.service.ServiceContext.class);
+
+		_updateStatusMethodKey19 = new MethodKey(_classLoaderProxy.getClassName(),
+				"updateStatus", long.class, long.class, int.class,
+				com.liferay.portal.service.ServiceContext.class);
 	}
 
 	public com.maximgalushka.service.model.Document addDocument(
@@ -399,12 +411,45 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 		return (com.liferay.portal.model.PersistedModel)ClpSerializer.translateOutput(returnObj);
 	}
 
+	public com.maximgalushka.service.model.Document getDocumentByUuidAndGroupId(
+		java.lang.String uuid, long groupId)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		Object returnObj = null;
+
+		MethodHandler methodHandler = new MethodHandler(_getDocumentByUuidAndGroupIdMethodKey11,
+				ClpSerializer.translateInput(uuid), groupId);
+
+		try {
+			returnObj = _classLoaderProxy.invoke(methodHandler);
+		}
+		catch (Throwable t) {
+			if (t instanceof com.liferay.portal.kernel.exception.PortalException) {
+				throw (com.liferay.portal.kernel.exception.PortalException)t;
+			}
+
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					" is not a valid exception");
+			}
+		}
+
+		return (com.maximgalushka.service.model.Document)ClpSerializer.translateOutput(returnObj);
+	}
+
 	public java.util.List<com.maximgalushka.service.model.Document> getDocuments(
 		int start, int end)
 		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
-		MethodHandler methodHandler = new MethodHandler(_getDocumentsMethodKey11,
+		MethodHandler methodHandler = new MethodHandler(_getDocumentsMethodKey12,
 				start, end);
 
 		try {
@@ -431,7 +476,7 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
-		MethodHandler methodHandler = new MethodHandler(_getDocumentsCountMethodKey12);
+		MethodHandler methodHandler = new MethodHandler(_getDocumentsCountMethodKey13);
 
 		try {
 			returnObj = _classLoaderProxy.invoke(methodHandler);
@@ -458,7 +503,7 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
-		MethodHandler methodHandler = new MethodHandler(_updateDocumentMethodKey13,
+		MethodHandler methodHandler = new MethodHandler(_updateDocumentMethodKey14,
 				ClpSerializer.translateInput(document));
 
 		try {
@@ -486,7 +531,7 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 		throws com.liferay.portal.kernel.exception.SystemException {
 		Object returnObj = null;
 
-		MethodHandler methodHandler = new MethodHandler(_updateDocumentMethodKey14,
+		MethodHandler methodHandler = new MethodHandler(_updateDocumentMethodKey15,
 				ClpSerializer.translateInput(document), merge);
 
 		try {
@@ -512,7 +557,7 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 	public java.lang.String getBeanIdentifier() {
 		Object returnObj = null;
 
-		MethodHandler methodHandler = new MethodHandler(_getBeanIdentifierMethodKey15);
+		MethodHandler methodHandler = new MethodHandler(_getBeanIdentifierMethodKey16);
 
 		try {
 			returnObj = _classLoaderProxy.invoke(methodHandler);
@@ -531,7 +576,7 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 	}
 
 	public void setBeanIdentifier(java.lang.String beanIdentifier) {
-		MethodHandler methodHandler = new MethodHandler(_setBeanIdentifierMethodKey16,
+		MethodHandler methodHandler = new MethodHandler(_setBeanIdentifierMethodKey17,
 				ClpSerializer.translateInput(beanIdentifier));
 
 		try {
@@ -546,6 +591,71 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 					" is not a valid exception");
 			}
 		}
+	}
+
+	public com.maximgalushka.service.model.Document addDocument(
+		com.maximgalushka.service.model.Document document,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.SystemException {
+		Object returnObj = null;
+
+		MethodHandler methodHandler = new MethodHandler(_addDocumentMethodKey18,
+				ClpSerializer.translateInput(document),
+				ClpSerializer.translateInput(serviceContext));
+
+		try {
+			returnObj = _classLoaderProxy.invoke(methodHandler);
+		}
+		catch (Throwable t) {
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					" is not a valid exception");
+			}
+		}
+
+		return (com.maximgalushka.service.model.Document)ClpSerializer.translateOutput(returnObj);
+	}
+
+	public com.maximgalushka.service.model.Document updateStatus(long userId,
+		long resourcePrimKey, int status,
+		com.liferay.portal.service.ServiceContext serviceContext)
+		throws com.liferay.portal.kernel.exception.PortalException,
+			com.liferay.portal.kernel.exception.SystemException {
+		Object returnObj = null;
+
+		MethodHandler methodHandler = new MethodHandler(_updateStatusMethodKey19,
+				userId, resourcePrimKey, status,
+				ClpSerializer.translateInput(serviceContext));
+
+		try {
+			returnObj = _classLoaderProxy.invoke(methodHandler);
+		}
+		catch (Throwable t) {
+			if (t instanceof com.liferay.portal.kernel.exception.PortalException) {
+				throw (com.liferay.portal.kernel.exception.PortalException)t;
+			}
+
+			if (t instanceof com.liferay.portal.kernel.exception.SystemException) {
+				throw (com.liferay.portal.kernel.exception.SystemException)t;
+			}
+
+			if (t instanceof RuntimeException) {
+				throw (RuntimeException)t;
+			}
+			else {
+				throw new RuntimeException(t.getClass().getName() +
+					" is not a valid exception");
+			}
+		}
+
+		return (com.maximgalushka.service.model.Document)ClpSerializer.translateOutput(returnObj);
 	}
 
 	public ClassLoaderProxy getClassLoaderProxy() {
@@ -564,10 +674,13 @@ public class DocumentLocalServiceClp implements DocumentLocalService {
 	private MethodKey _fetchDocumentMethodKey8;
 	private MethodKey _getDocumentMethodKey9;
 	private MethodKey _getPersistedModelMethodKey10;
-	private MethodKey _getDocumentsMethodKey11;
-	private MethodKey _getDocumentsCountMethodKey12;
-	private MethodKey _updateDocumentMethodKey13;
+	private MethodKey _getDocumentByUuidAndGroupIdMethodKey11;
+	private MethodKey _getDocumentsMethodKey12;
+	private MethodKey _getDocumentsCountMethodKey13;
 	private MethodKey _updateDocumentMethodKey14;
-	private MethodKey _getBeanIdentifierMethodKey15;
-	private MethodKey _setBeanIdentifierMethodKey16;
+	private MethodKey _updateDocumentMethodKey15;
+	private MethodKey _getBeanIdentifierMethodKey16;
+	private MethodKey _setBeanIdentifierMethodKey17;
+	private MethodKey _addDocumentMethodKey18;
+	private MethodKey _updateStatusMethodKey19;
 }

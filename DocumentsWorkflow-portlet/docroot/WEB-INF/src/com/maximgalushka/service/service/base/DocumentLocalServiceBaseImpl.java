@@ -38,6 +38,10 @@ import com.liferay.portal.service.UserService;
 import com.liferay.portal.service.persistence.ResourcePersistence;
 import com.liferay.portal.service.persistence.UserPersistence;
 
+import com.liferay.portlet.asset.service.AssetEntryLocalService;
+import com.liferay.portlet.asset.service.AssetEntryService;
+import com.liferay.portlet.asset.service.persistence.AssetEntryPersistence;
+
 import com.maximgalushka.service.model.Document;
 import com.maximgalushka.service.service.DocumentLocalService;
 import com.maximgalushka.service.service.HistoryService;
@@ -241,6 +245,20 @@ public abstract class DocumentLocalServiceBaseImpl
 	public PersistedModel getPersistedModel(Serializable primaryKeyObj)
 		throws PortalException, SystemException {
 		return documentPersistence.findByPrimaryKey(primaryKeyObj);
+	}
+
+	/**
+	 * Returns the Document with the UUID in the group.
+	 *
+	 * @param uuid the UUID of Document
+	 * @param groupId the group id of the Document
+	 * @return the Document
+	 * @throws PortalException if a Document with the UUID in the group could not be found
+	 * @throws SystemException if a system exception occurred
+	 */
+	public Document getDocumentByUuidAndGroupId(String uuid, long groupId)
+		throws PortalException, SystemException {
+		return documentPersistence.findByUUID_G(uuid, groupId);
 	}
 
 	/**
@@ -511,6 +529,62 @@ public abstract class DocumentLocalServiceBaseImpl
 		this.userPersistence = userPersistence;
 	}
 
+	/**
+	 * Returns the asset entry local service.
+	 *
+	 * @return the asset entry local service
+	 */
+	public AssetEntryLocalService getAssetEntryLocalService() {
+		return assetEntryLocalService;
+	}
+
+	/**
+	 * Sets the asset entry local service.
+	 *
+	 * @param assetEntryLocalService the asset entry local service
+	 */
+	public void setAssetEntryLocalService(
+		AssetEntryLocalService assetEntryLocalService) {
+		this.assetEntryLocalService = assetEntryLocalService;
+	}
+
+	/**
+	 * Returns the asset entry remote service.
+	 *
+	 * @return the asset entry remote service
+	 */
+	public AssetEntryService getAssetEntryService() {
+		return assetEntryService;
+	}
+
+	/**
+	 * Sets the asset entry remote service.
+	 *
+	 * @param assetEntryService the asset entry remote service
+	 */
+	public void setAssetEntryService(AssetEntryService assetEntryService) {
+		this.assetEntryService = assetEntryService;
+	}
+
+	/**
+	 * Returns the asset entry persistence.
+	 *
+	 * @return the asset entry persistence
+	 */
+	public AssetEntryPersistence getAssetEntryPersistence() {
+		return assetEntryPersistence;
+	}
+
+	/**
+	 * Sets the asset entry persistence.
+	 *
+	 * @param assetEntryPersistence the asset entry persistence
+	 */
+	public void setAssetEntryPersistence(
+		AssetEntryPersistence assetEntryPersistence) {
+		this.assetEntryPersistence = assetEntryPersistence;
+	}
+
 	public void afterPropertiesSet() {
 		PersistedModelLocalServiceRegistryUtil.register("com.maximgalushka.service.model.Document",
 			documentLocalService);
@@ -588,6 +662,12 @@ public abstract class DocumentLocalServiceBaseImpl
 	protected UserService userService;
 	@BeanReference(type = UserPersistence.class)
 	protected UserPersistence userPersistence;
+	@BeanReference(type = AssetEntryLocalService.class)
+	protected AssetEntryLocalService assetEntryLocalService;
+	@BeanReference(type = AssetEntryService.class)
+	protected AssetEntryService assetEntryService;
+	@BeanReference(type = AssetEntryPersistence.class)
+	protected AssetEntryPersistence assetEntryPersistence;
 	private static Log _log = LogFactoryUtil.getLog(DocumentLocalServiceBaseImpl.class);
 	private String _beanIdentifier;
 }

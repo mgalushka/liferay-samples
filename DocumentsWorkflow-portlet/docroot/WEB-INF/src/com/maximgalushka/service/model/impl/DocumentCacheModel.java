@@ -32,12 +32,16 @@ import java.io.Serializable;
 public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 	@Override
 	public String toString() {
-		StringBundler sb = new StringBundler(13);
+		StringBundler sb = new StringBundler(17);
 
-		sb.append("{documentId=");
+		sb.append("{uuid=");
+		sb.append(uuid);
+		sb.append(", documentId=");
 		sb.append(documentId);
 		sb.append(", companyId=");
 		sb.append(companyId);
+		sb.append(", groupId=");
+		sb.append(groupId);
 		sb.append(", userId=");
 		sb.append(userId);
 		sb.append(", title=");
@@ -54,8 +58,16 @@ public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 	public Document toEntityModel() {
 		DocumentImpl documentImpl = new DocumentImpl();
 
+		if (uuid == null) {
+			documentImpl.setUuid(StringPool.BLANK);
+		}
+		else {
+			documentImpl.setUuid(uuid);
+		}
+
 		documentImpl.setDocumentId(documentId);
 		documentImpl.setCompanyId(companyId);
+		documentImpl.setGroupId(groupId);
 		documentImpl.setUserId(userId);
 
 		if (title == null) {
@@ -79,8 +91,10 @@ public class DocumentCacheModel implements CacheModel<Document>, Serializable {
 		return documentImpl;
 	}
 
+	public String uuid;
 	public long documentId;
 	public long companyId;
+	public long groupId;
 	public long userId;
 	public String title;
 	public String type;

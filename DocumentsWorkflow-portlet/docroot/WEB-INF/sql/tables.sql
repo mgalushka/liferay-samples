@@ -1,6 +1,8 @@
 create table docs_Document (
+	uuid_ VARCHAR(75) null,
 	documentId LONG not null primary key,
 	companyId LONG,
+	groupId LONG,
 	userId LONG,
 	title VARCHAR(75) null,
 	type_ VARCHAR(75) null,

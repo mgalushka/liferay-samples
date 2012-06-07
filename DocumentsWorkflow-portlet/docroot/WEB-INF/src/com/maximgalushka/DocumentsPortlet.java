@@ -5,7 +5,10 @@ import javax.portlet.ActionResponse;
 
 import org.apache.log4j.Logger;
 
+import com.liferay.portal.kernel.exception.PortalException;
 import com.liferay.portal.kernel.exception.SystemException;
+import com.liferay.portal.service.ServiceContext;
+import com.liferay.portal.service.ServiceContextFactory;
 //import com.liferay.portal.kernel.util.WebKeys;
 //import com.liferay.portal.theme.ThemeDisplay;
 import com.liferay.util.bridges.mvc.MVCPortlet;
@@ -48,7 +51,15 @@ public class DocumentsPortlet extends MVCPortlet {
 		
 		Document doc = Util.documentFromRequest(request);
 		if(Long.valueOf("0").equals(doc.getPrimaryKey())){
-			DocumentLocalServiceUtil.addDocument(doc);
+			try {
+				ServiceContext serviceContext = ServiceContextFactory.
+										getInstance(Document.class.getName(), request);
+				
+				DocumentLocalServiceUtil.addDocument(doc, serviceContext);
+				
+			} catch (PortalException e) {
+				e.printStackTrace();
+			}
 		}
 		else{
 			DocumentLocalServiceUtil.updateDocument(doc);

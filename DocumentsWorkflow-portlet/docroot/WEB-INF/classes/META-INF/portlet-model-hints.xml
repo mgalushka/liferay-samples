@@ -2,12 +2,14 @@
 
 <model-hints>
 	<model name="com.maximgalushka.service.model.Document">
+		<field name="uuid" type="String" />
 		<field name="documentId" type="long" />
 		<field name="companyId" type="long" />
+		<field name="groupId" type="long" />
 		<field name="userId" type="long" />
 		<field name="title" type="String" />
 		<field name="type" type="String" />
-		<field name="status" type="String" />
+		<field name="status" type="int" />
 	</model>
 	<model name="com.maximgalushka.service.model.History">
 		<field name="logId" type="long" />
